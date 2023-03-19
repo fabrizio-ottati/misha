@@ -1,6 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
+#include <filesystem>
 #include <iostream>
 
 #include "misha/common.h"
@@ -34,13 +35,16 @@ MishaStatus_t count_fn_dat(FILE* fp, MishaDATInfo& info) {
     info.common.status = MISHA_FILE_ERROR; 
     return MISHA_FILE_ERROR; 
   }
-
+  
   // Getting number of events as (file_size - header_size)/bytes_per_event.
   info.common.dim = 
     (ftello(fp) - info.common.startByte - 2) / sizeof(MishaDATPkt_t); 
   return MISHA_OK; 
 }
 
+/**
+ *  Read function.
+ */
 MishaStatus_t read_fn_dat(FILE* fp, MishaDATInfo&info, MishaEvent* arr) {
   // Jumping two bytes.
   if (fseeko(fp, 2, SEEK_CUR) != 0) {
@@ -61,7 +65,7 @@ MishaStatus_t read_fn_dat(FILE* fp, MishaDATInfo&info, MishaEvent* arr) {
   MishaDATPkt_t upper; 
   while (
     n < info.common.dim && 
-      (numRead = fread(buff, sizeof(*buff), MISHA_FILE_BUFFER_SIZE, fp) > 0)
+      (numRead = fread(buff, sizeof(*buff), MISHA_FILE_BUFFER_SIZE, fp)) > 0
     ) {
     for (i=0; n < info.common.dim && i < numRead; i++) {
       arr[n].t = buff[i] & 0xFFFFFFFF; 
