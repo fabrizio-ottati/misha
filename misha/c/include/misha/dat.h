@@ -3,7 +3,8 @@
 
 // Library to handle DAT encoded binary files.
 
-#include <stdlib.h>
+#include <cstdint>
+#include <cstdlib>
 
 #include "misha/common.h"
 #include "misha/types.h"
@@ -13,23 +14,27 @@
 #define MISHA_DAT_EVENT_CD 0x0C
 #define MISHA_DAT_EVENT_EXT_TRIGGER 0x0E
 
-/** Wrap structure for the cargo information about the events tuned for the 
- *  DAT encoding format.
- *      
- *  @field  events_info Information about the event stream. See "events.h".
- *  @field  last_t      Last timestamp read.
- *  @field  time_ovfs   Number of overflows in the timestamps occured in the
- *                      event stream, for recordings with t >= 2^32.
- */
-typedef struct {
-	MishaCommonInfo_t common; 
-	MishaTs_t last_t; 
-	MishaTs_t time_ovfs; 
-} MishaDATInfo_t; 
+struct MishaDATInfo {
+  MishaCommonInfo common; 
+  MishaTime_t last_t; 
+  MishaTime_t timeOvfs; 
+}; 
 
-typedef uint64_t MishaDATPkt_t; 
+typedef std::uint64_t MishaDATPkt_t; 
 
-void count_events_dat(FILE* fp, void* info); 
-DLLEXPORT void count_events_dat_wrap(const char* fpath, MishaDATInfo_t* info); 
+extern "C" {
+
+DLLEXPORT MishaStatus_t count_events_dat(
+  const char* fpath, MishaDATInfo& info
+  ); 
+
+DLLEXPORT MishaStatus_t read_events_dat(
+  const char* fpath, MishaDATInfo& info, MishaEvent* arr
+  ); 
+
+} // extern "C"
+
+MishaStatus_t count_fn_dat(FILE* fp, MishaDATInfo& info); 
+MishaStatus_t read_fn_dat(FILE* fp, MishaDATInfo&info, MishaEvent* arr); 
 
 #endif // MISHA_DAT_H_
