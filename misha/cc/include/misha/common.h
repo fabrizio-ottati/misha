@@ -83,7 +83,7 @@ template <class Info> MishaStatus_t jump_header(
 template <class Info> MishaStatus_t count_events(
   const char* fpath, 
   Info& info, 
-  MishaStatus_t (*count_fn)(FILE*, Info&) 
+  MishaStatus_t (*count_fn)(FILE*, Info&)
   ){
 
   MishaStatus_t status; 
@@ -96,22 +96,13 @@ template <class Info> MishaStatus_t count_events(
   }
 	
 	// Jumping over the headers.
-	if (info.common.startByte == 0){
-    status = jump_header<Info>(fp, nullptr, false, info); 
-    if (status != MISHA_OK) {
-      std::cerr << "ERROR: While processing file header." << std::endl; 
-      info.common.status = status; 
-      fclose(fp); 
-      return status; 
-    }
-	} else {
-		if (fseeko(fp, (long) info.common.startByte, SEEK_CUR) != 0) {
-      std::cerr << "ERROR: Could not perform fseeko." << std::endl; 
-      info.common.status = MISHA_FILE_ERROR; 
-      fclose(fp); 
-      return status; 
-    }
-	}
+  status = jump_header<Info>(fp, nullptr, false, info); 
+  if (status != MISHA_OK) {
+    std::cerr << "ERROR: While processing file header." << std::endl; 
+    info.common.status = status; 
+    fclose(fp); 
+    return status; 
+  }
 
   status = count_fn(fp, info); 
   
