@@ -27,6 +27,9 @@ extern "C" {
 
 } // extern "C"
 
+/**
+ *  Count events function.
+ */
 MishaStatus_t count_fn_dat(FILE* fp, MishaDATInfo& info) {
   // Reaching end of file to count number of bytes.
   if (fseeko(fp, 0, SEEK_END) != 0) {
