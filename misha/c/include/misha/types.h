@@ -9,13 +9,9 @@
 #include <stdint.h>
 
 // Data types used for the event data structure fields.
-typedef int64_t MishaTs_t;  
 typedef int16_t MishaAddr_t; 
 typedef uint8_t MishaPol_t; 
-
-typedef uint8_t MishaBool_t; 
-#define MISHA_TRUE 1
-#define MISHA_FALSE 0
+typedef int64_t MishaTime_t;  
 
 typedef enum {
   DAT,
@@ -40,12 +36,12 @@ typedef enum {
  *  @field  y Y address of the pixel.
  *  @field  p Polarity of the event.
  */
-typedef struct {
+struct MishaEvent {
 	MishaAddr_t x; 
 	MishaAddr_t y; 
 	MishaPol_t p; 
-	MishaTs_t t; 
-} MishaEvent_t; 
+	MishaTime_t t; 
+}; 
 
 /** Structure that holds additional information about the event stream.
  *
@@ -62,21 +58,14 @@ typedef struct {
  *                          point where it was left off.
  *  @field  finished        Flag to indicate that the entire file has been read.
  */
-typedef struct {
+struct MishaCommonInfo {
   MishaStatus_t status; 
 	size_t dim;
-	MishaBool_t is_chunk; 
-	size_t time_window; 
-	MishaBool_t is_time_window; 
-	size_t start_byte;
-	MishaBool_t finished; 
-} MishaCommonInfo_t; 
-
-// Macro to check that the event stream is monotonic in the timestamps.
-inline int check_timestamps(timestamp_t t, timestamp_t prev_t) {
-    if (t < prev_t) 
-        return 1; 
-    return 0; 
-}
+	bool isChunk; 
+	size_t timeWindow; 
+	bool isTimeWindow; 
+	size_t startByte;
+	bool finished; 
+}; 
 
 #endif // MISHA_TYPES_H_
