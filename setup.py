@@ -1,5 +1,5 @@
 # Inspired by https://github.com/himbeles/ctypes-example.
-import pathlib
+from pathlib import Path
 from distutils.command.build_ext import build_ext as build_ext_orig
 
 from setuptools import Extension, setup
@@ -26,6 +26,14 @@ class build_ext(build_ext_orig):
 # with open("README.md", "r") as file:
 #     long_description = file.read()
 
+my_extension = CTypesExtension(
+    name = "clib-misha", 
+    sources = [
+        str(Path("misha", "cc", "src", "dat.cc")), 
+    ], 
+    include_dirs = [str(Path("misha", "cc", "include")),]
+    )
+
 setup(
     name="misha",
     install_requires=["numpy"],
@@ -35,22 +43,19 @@ setup(
     maintainer_email="mail@fabrizio-ottati.dev, mail@lenzgregor.com",
     url="https://github.com/fabrizio-ottati/misha",
     version="0.0.0",
+    classifiers = [
+        "Programming Language :: Python :: 3",
+        "Programming Language :: C++",
+        "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+        "Operating System :: OS Independent",
+    ],
     # long_description=long_description,
     # long_description_content_type="text/markdown",
-    # packages=[
-    #     "expelliarmus",
-    #     "expelliarmus.wizard",
-    # ],
-    # ext_modules=[
-    #     CTypesExtension(
-    #         "expelliarmus",
-    #         [
-    #             str(pathlib.Path("expelliarmus", "src", "wizard.c")),
-    #             str(pathlib.Path("expelliarmus", "src", "dat.c")),
-    #             str(pathlib.Path("expelliarmus", "src", "evt2.c")),
-    #             str(pathlib.Path("expelliarmus", "src", "evt3.c")),
-    #         ],
-    #     ),
-    # ],
-    # cmdclass={"build_ext": build_ext},
+    packages=[
+        "misha",
+    ],
+    ext_modules=[
+        my_extension,
+    ],
+    cmdclass={"build_ext": build_ext},
 )
