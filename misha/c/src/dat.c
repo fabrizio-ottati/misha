@@ -1,48 +1,29 @@
-#include "dat.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
-#define LOOP_CONDITION(window, last_t, ovfs, first_t) (window > \
-        (((ovfs << 32) | last_t) - first_t))
+#include "dat.h"
 
-DLLEXPORT void measure_dat(
-  const char* fpath, dat_cargo_t* cargo, size_t buff_size
-  ){
+void count_events_dat(FILE* fp, void* info) {
+  MishaDATInfo_t* DATInfo = (MishaDATInfo_t*) info;  
 
-	FILE* fp = fopen(fpath, "rb"); 
-	MEAS_CHECK_FILE(fp, fpath, cargo); 
-	
-	// Jumping over the headers.
-	if (cargo->events_info.start_byte == 0){
-		MEAS_CHECK_JUMP_HEADER( (cargo->events_info.start_byte = 
-                                    jump_header(fp, NULL, 0U)),
-                                cargo );
-		// Jumping two bytes.
-		MEAS_CHECK_FSEEK(fseek(fp, 2, SEEK_CUR), cargo); 
-		cargo->events_info.start_byte += 2; 
-	} else {
-		MEAS_CHECK_FSEEK(fseek( fp, 
-                                (long)cargo->events_info.start_byte, SEEK_SET), 
-                                cargo ); 
-	}
+  // Reaching end of file to count number of bytes.
+  if (fseeko(fp, 0, SEEK_END) != 0) {
+    fprintf(stderr, "ERROR: Could not reach end of file through fseeko().\n"); 
+    info->status = MISHA_FILE_ERROR; 
+    return; 
+  }
 
-	// Buffer to read binary data.
-	uint64_t* buff = (uint64_t*) malloc(buff_size * sizeof(uint64_t));
-	MEAS_CHECK_BUFF_ALLOCATION(buff, cargo); 
-	
-	size_t dim=0, values_read=0, j=0; 
-	
-	// Reading the file.
-	while ((values_read = fread(buff, sizeof(*buff), buff_size, fp)) > 0)
-		dim += values_read; 
+  // Getting number of events as (file_size - header_size)/bytes_per_event.
+  DATInfo->common.dim = 
+    (ftello(fp) - DATInfo->common.start_byte) / sizeof(MishaDATPkt_t); 
+  return; 
+}
 
-	free(buff); 
-	fclose(fp); 
-	cargo->events_info.dim = dim; 
-	if (values_read==0)
-		cargo->events_info.finished = 1;
+
+DLLEXPORT void count_events_dat_wrap(const char* fpath, MishaDATInfo_t* info) {
+  count_events(fpath, (void*)info, DAT, count_events_dat); 
 	return;
 }
 

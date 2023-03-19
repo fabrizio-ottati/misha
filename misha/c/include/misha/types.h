@@ -1,5 +1,5 @@
-#ifndef EXPELLIARMUS_EVENTS_H 
-#define EXPELLIARMUS_EVENTS_H
+#ifndef MISHA_TYPES_H_
+#define MISHA_TYPES_H_
 
 /** Library for events streams.
  *  Data structures used to hold information about an event stream. 
@@ -9,23 +9,43 @@
 #include <stdint.h>
 
 // Data types used for the event data structure fields.
-typedef int64_t timestamp_t;  
-typedef int16_t address_t; 
-typedef uint8_t polarity_t; 
+typedef int64_t MishaTs_t;  
+typedef int16_t MishaAddr_t; 
+typedef uint8_t MishaPol_t; 
+
+typedef uint8_t MishaBool_t; 
+#define MISHA_TRUE 1
+#define MISHA_FALSE 0
+
+typedef enum {
+  DAT,
+  EVT2, 
+  EVT3
+} MishaEncoding_t; 
+
+typedef enum {
+  MISHA_OK, 
+  MISHA_FILE_ERROR, 
+  MISHA_FSEEK_ERROR, 
+  MISHA_UNKNOWN_EVENT,
+  MISHA_ALLOCATION_ERROR, 
+  MISHA_UNKNOWN_ENCODING, 
+  MISHA_UNEXPECTED_ERROR
+} MishaStatus_t; 
 
 /** Structure of an event in a recording.
  *
- *  @field  t   Timestamp.
- *  @field  x   X address of the pixel.
- *  @field  y   Y address of the pixel.
- *  @field  p   Polarity of the event.
+ *  @field  t Timestamp.
+ *  @field  x X address of the pixel.
+ *  @field  y Y address of the pixel.
+ *  @field  p Polarity of the event.
  */
-typedef struct event_s {
-	timestamp_t t; 
-	address_t x; 
-	address_t y; 
-	polarity_t p; 
-} event_t; 
+typedef struct {
+	MishaAddr_t x; 
+	MishaAddr_t y; 
+	MishaPol_t p; 
+	MishaTs_t t; 
+} MishaEvent_t; 
 
 /** Structure that holds additional information about the event stream.
  *
@@ -43,13 +63,14 @@ typedef struct event_s {
  *  @field  finished        Flag to indicate that the entire file has been read.
  */
 typedef struct {
+  MishaStatus_t status; 
 	size_t dim;
-	uint8_t is_chunk; 
+	MishaBool_t is_chunk; 
 	size_t time_window; 
-	uint8_t is_time_window; 
+	MishaBool_t is_time_window; 
 	size_t start_byte;
-	uint8_t finished; 
-} event_cargo_t; 
+	MishaBool_t finished; 
+} MishaCommonInfo_t; 
 
 // Macro to check that the event stream is monotonic in the timestamps.
 inline int check_timestamps(timestamp_t t, timestamp_t prev_t) {
@@ -58,4 +79,4 @@ inline int check_timestamps(timestamp_t t, timestamp_t prev_t) {
     return 0; 
 }
 
-#endif // EXPELLIARMUS_EVENTS_H
+#endif // MISHA_TYPES_H_

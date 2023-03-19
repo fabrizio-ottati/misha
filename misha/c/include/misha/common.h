@@ -1,15 +1,16 @@
-#ifndef EXPELLIARMUS_INCLUDE_WIZARD_H_
-#define EXPELLIARMUS_INCLUDE_WIZARD_H_
+#ifndef MISHA_COMMON_H_
+#define MISHA_COMMON_H_
 
 // Macros common to the encoding specific libraries.
 
 #include <stdio.h> 
 #include <stdint.h>
-#include "events.h"
+
+#include "misha/types.h"
 
 // Headers delimiters.
-#define HEADER_START 0x25
-#define HEADER_END 0x0A
+#define MISHA_HEADER_START 0x25
+#define MISHA_HEADER_END 0x0A
 
 // Thank you http://wolfprojects.altervista.org/articles/dll-in-c-for-python/ :)
 // Thanks to this lines, also Windows DLL works.
@@ -221,4 +222,4 @@
  */
 size_t jump_header(FILE*, FILE*, uint8_t);
 
-#endif // EXPELLIARMUS_INCLUDE_WIZARD_H_
+#endif // MISHA_COMMON_H_
