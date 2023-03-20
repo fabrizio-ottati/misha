@@ -70,3 +70,9 @@ read_events_dat.argtypes = [
     ctypes.POINTER(MishaDATInfo), # info
     ndpointer(ndim=1), # arr
 ]
+
+reset_common_info_dat = clib.reset_common_info_dat
+reset_common_info_dat.res = MishaStatus_t
+read_events_dat.argtype = [
+    ctypes.POINTER(MishaDATInfo),
+]
