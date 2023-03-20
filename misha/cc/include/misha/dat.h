@@ -32,6 +32,8 @@ DLLEXPORT MishaStatus_t read_events_dat(
   const char* fpath, MishaDATInfo& info, MishaEvent* arr
   ); 
 
+DLLEXPORT MishaStatus_t reset_common_info_dat(MishaDATInfo& info); 
+
 } // extern "C"
 
 MishaStatus_t count_fn_dat(FILE* fp, MishaDATInfo& info); 
