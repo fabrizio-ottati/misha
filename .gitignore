@@ -5,3 +5,5 @@ build
 
 # Backup files.
 *.bak
+# Pycache folders.
+__pycache__
