@@ -56,13 +56,7 @@ MishaStatus_t read_fn_dat(FILE* fp, MishaDATInfo&info, MishaEvent* arr) {
     return MISHA_FILE_ERROR;
   }
 
-  MishaDATPkt_t* buff = 
-    (MishaDATPkt_t*) malloc(MISHA_FILE_BUFFER_SIZE * sizeof(MishaDATPkt_t));
-  if (buff == NULL) {
-    std::cerr << "ERROR: Could not allocate file buffer." << std::endl; 
-    info.common.status = MISHA_ALLOCATION_ERROR;
-    return MISHA_ALLOCATION_ERROR;
-  }
+  MishaDATPkt_t buff[MISHA_FILE_BUFFER_SIZE]; 
 
   std::size_t i=0, n=0, numRead=0; 
   MishaDATPkt_t upper; 
@@ -79,7 +73,6 @@ MishaStatus_t read_fn_dat(FILE* fp, MishaDATInfo&info, MishaEvent* arr) {
     }
     info.common.startByte += i*sizeof(*buff); 
   }
-  free(buff); 
 
   info.common.dim = n; 
   if (numRead == 0) {
@@ -89,3 +82,4 @@ MishaStatus_t read_fn_dat(FILE* fp, MishaDATInfo&info, MishaEvent* arr) {
 
   return MISHA_OK;
 }
+
