@@ -12,7 +12,7 @@
 #define MISHA_HEADER_END char(0x0A)
 
 #define MISHA_FILE_BUFFER_SIZE 4096
-#define MISHA_HEADER_BUFF_SZ 1024
+#define MISHA_HEADER_BUFF_SZ 256
 
 // Thank you http://wolfprojects.altervista.org/articles/dll-in-c-for-python/!
 #ifdef _WIN32
