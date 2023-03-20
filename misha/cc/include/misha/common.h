@@ -8,10 +8,11 @@
 #include "misha/types.h"
 
 // Headers delimiters.
-#define MISHA_HEADER_START 0x25
-#define MISHA_HEADER_END 0x0A
+#define MISHA_HEADER_START char(0x25)
+#define MISHA_HEADER_END char(0x0A)
 
 #define MISHA_FILE_BUFFER_SIZE 4096
+#define MISHA_HEADER_BUFF_SZ 1024
 
 // Thank you http://wolfprojects.altervista.org/articles/dll-in-c-for-python/!
 #ifdef _WIN32
@@ -40,42 +41,51 @@ template <class Info> MishaStatus_t jump_header(
   ) {
 
   std::size_t nbytes = 0; 
-  char c; 
-  bool headerStart; 
-  do {
-    headerStart = true; 
-    do { 
-      if (fread(&c, 1, 1, fp_in)!= 1) {
-        std::cerr << "ERROR: Could not read from file." << std::endl; 
-        info.common.status = MISHA_FILE_ERROR; 
-        return MISHA_FILE_ERROR; 
-      }
-      nbytes++;
-
-      if (headerStart && c != MISHA_HEADER_START){
-        // Coming back one byte.
-        if (fseeko(fp_in, -1, SEEK_CUR) != 0) {
-          std::cerr << "ERROR: Could not perform fseeko()." << std::endl; 
-          info.common.status = MISHA_FSEEK_ERROR; 
-          return MISHA_FSEEK_ERROR; 
+  bool checkFirst = false; 
+  char c[MISHA_HEADER_BUFF_SZ]; 
+  while (1) {
+    if (fread(c, 1, MISHA_HEADER_BUFF_SZ, fp_in) <= 0) {
+      std::cerr << "ERROR: Could not read from file." << std::endl; 
+      info.common.status = MISHA_FILE_ERROR; 
+      return MISHA_FILE_ERROR; 
+    }
+    for (std::size_t i=0; i < MISHA_HEADER_BUFF_SZ; i++) {
+      if (c[i] == MISHA_HEADER_END) {
+        if (i+1 < MISHA_HEADER_BUFF_SZ) {
+          if (c[i+1] != MISHA_HEADER_START) {
+            if (
+              fseeko(fp_in, -off_t(MISHA_HEADER_BUFF_SZ-(i+1)), SEEK_CUR) != 0
+              ) {
+              std::cerr << "ERROR: Could not perform fseeko()." << std::endl; 
+              info.common.status = MISHA_FSEEK_ERROR; 
+              return MISHA_FSEEK_ERROR; 
+            }
+            info.common.startByte = nbytes + i + 1; 
+            info.common.status = MISHA_OK; 
+            return MISHA_OK; 
+          } 
+        } else {
+          checkFirst = true; 
         }
-        info.common.startByte = --nbytes; 
-        info.common.status = MISHA_OK; 
-        return MISHA_OK; 
-      } else {
-        headerStart = false; 
-      }
-
-      if (copy) {
-        if (fwrite(&c, 1, 1, fp_out) != 1) {
-          std::cerr << "ERROR: Could not write to file." << std::endl; 
-          info.common.status = MISHA_FILE_ERROR; 
-          return MISHA_FILE_ERROR; 
+      } else if (checkFirst) {
+        if (c[0] != MISHA_HEADER_START) {
+          if (
+              fseeko(fp_in, -off_t(MISHA_HEADER_BUFF_SZ), SEEK_CUR) != 0
+             ) {
+            std::cerr << "ERROR: Could not perform fseeko()." << std::endl; 
+            info.common.status = MISHA_FSEEK_ERROR; 
+            return MISHA_FSEEK_ERROR; 
+          }
+          info.common.startByte = nbytes; 
+          info.common.status = MISHA_OK; 
+          return MISHA_OK; 
+        } else {
+          checkFirst = false; 
         }
       }
-    } while (c != MISHA_HEADER_END); 
-  } while (1); 
-
+    }
+    nbytes += MISHA_HEADER_BUFF_SZ; 
+  }
   return MISHA_UNEXPECTED_ERROR; 
 }
 
