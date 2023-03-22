@@ -14,10 +14,12 @@ class DAT:
         self._info = MishaDATInfo(MishaCommonInfo())
 
     def read(self, fpath):
-        status = count_events_dat(fpath, self._info)
+        _fpath = bytes(str(fpath), "utf-8")
+        status = count_events_dat(_fpath, self._info)
         arr = empty((self._info.common.dim,), dtype=MishaEvent)
-        read_events_dat(fpath, self._info, arr)
+        read_events_dat(_fpath, self._info, arr)
         return arr
 
     def reset(self):
         reset_common_info_dat(self._info)
+        return
