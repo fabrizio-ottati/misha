@@ -65,6 +65,7 @@ struct MishaCommonInfo {
 	size_t timeWindow; 
 	bool isTimeWindow; 
 	size_t startByte;
+  size_t headerSz; 
 	bool finished; 
 }; 
 
