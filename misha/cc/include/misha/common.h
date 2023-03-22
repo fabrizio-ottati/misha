@@ -33,6 +33,7 @@ template <class Info> MishaStatus_t reset_common_info(Info& info) {
   info.common.timeWindow = 0; 
   info.common.isTimeWindow = false; 
   info.common.startByte = 0; 
+  info.common.headerSz = 0; 
   info.common.finished = false; 
 
   return MISHA_OK; 
@@ -72,7 +73,7 @@ template <class Info> MishaStatus_t jump_header(
               info.common.status = MISHA_FSEEK_ERROR; 
               return MISHA_FSEEK_ERROR; 
             }
-            info.common.startByte = nbytes + i + 1; 
+            info.common.headerSz = nbytes + i + 1; 
             info.common.status = MISHA_OK; 
             return MISHA_OK; 
           } 
@@ -91,7 +92,7 @@ template <class Info> MishaStatus_t jump_header(
             info.common.status = MISHA_FSEEK_ERROR; 
             return MISHA_FSEEK_ERROR; 
           }
-          info.common.startByte = nbytes; 
+          info.common.headerSz = nbytes; 
           info.common.status = MISHA_OK; 
           return MISHA_OK; 
         } else {
@@ -162,7 +163,7 @@ template <class Info, read_fn<Info> fn> MishaStatus_t read_events(
   }
 	
 	// Jumping over the headers.
-	if (info.common.startByte == 0){
+	if (info.common.headerSz == 0){
     status = jump_header<Info>(fp, info); 
     if (status != MISHA_OK) {
       std::cerr << "ERROR: While processing file header." << std::endl; 
@@ -171,7 +172,11 @@ template <class Info, read_fn<Info> fn> MishaStatus_t read_events(
       return status; 
     }
 	} else {
-		if (fseeko(fp, (off_t) info.common.startByte, SEEK_CUR) != 0) {
+		if (
+      fseeko(
+        fp, off_t(info.common.headerSz + info.common.startByte), SEEK_CUR
+        ) != 0
+      ) {
       std::cerr << "ERROR: Could not perform fseeko." << std::endl; 
       info.common.status = MISHA_FILE_ERROR; 
       fclose(fp); 
