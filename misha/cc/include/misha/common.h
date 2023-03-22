@@ -21,6 +21,12 @@
 #define DLLEXPORT
 #endif
 
+/** Resetting the common information field of the info structure.
+ *
+ *  @param[out] info    The info data structure.
+ *
+ *  @return     status  Status flag.
+ */
 template <class Info> MishaStatus_t reset_common_info(Info& info) {
   info.common.status = MISHA_OK; 
   info.common.isChunk = false; 
@@ -33,10 +39,15 @@ template <class Info> MishaStatus_t reset_common_info(Info& info) {
 }
 
 
+/** Skipping the header in Prophesee formats.
+ *
+ *  @param[in]  fp      Input file pointer.
+ *  @param[out] info    The info data structure.
+ *
+ *  @return     status  The status flag.
+ */
 template <class Info> MishaStatus_t jump_header(
-  FILE* fp_in, 
-  FILE* fp_out, 
-  bool copy, 
+  FILE* fp, 
   Info& info
   ) {
 
@@ -44,7 +55,7 @@ template <class Info> MishaStatus_t jump_header(
   bool checkFirst = false; 
   char c[MISHA_HEADER_BUFF_SZ]; 
   while (1) {
-    if (fread(c, 1, MISHA_HEADER_BUFF_SZ, fp_in) <= 0) {
+    if (fread(c, 1, MISHA_HEADER_BUFF_SZ, fp) <= 0) {
       std::cerr << "ERROR: Could not read from file." << std::endl; 
       info.common.status = MISHA_FILE_ERROR; 
       return MISHA_FILE_ERROR; 
@@ -53,8 +64,9 @@ template <class Info> MishaStatus_t jump_header(
       if (c[i] == MISHA_HEADER_END) {
         if (i+1 < MISHA_HEADER_BUFF_SZ) {
           if (c[i+1] != MISHA_HEADER_START) {
+            // Reached end of header.
             if (
-              fseeko(fp_in, -off_t(MISHA_HEADER_BUFF_SZ-(i+1)), SEEK_CUR) != 0
+              fseeko(fp, -off_t(MISHA_HEADER_BUFF_SZ-(i+1)), SEEK_CUR) != 0
               ) {
               std::cerr << "ERROR: Could not perform fseeko()." << std::endl; 
               info.common.status = MISHA_FSEEK_ERROR; 
@@ -65,12 +77,15 @@ template <class Info> MishaStatus_t jump_header(
             return MISHA_OK; 
           } 
         } else {
+          // Header might not be finished, checking next bufferf of 
+          // characters.
           checkFirst = true; 
         }
       } else if (checkFirst) {
+        // Checking first character to see if the header has ended.
         if (c[0] != MISHA_HEADER_START) {
           if (
-              fseeko(fp_in, -off_t(MISHA_HEADER_BUFF_SZ), SEEK_CUR) != 0
+              fseeko(fp, -off_t(MISHA_HEADER_BUFF_SZ), SEEK_CUR) != 0
              ) {
             std::cerr << "ERROR: Could not perform fseeko()." << std::endl; 
             info.common.status = MISHA_FSEEK_ERROR; 
@@ -90,10 +105,11 @@ template <class Info> MishaStatus_t jump_header(
 }
 
 
-template <class Info> MishaStatus_t count_events(
+template <class Info>
+using count_fn = MishaStatus_t(*)(FILE*, Info&); 
+template <class Info, count_fn<Info> fn> MishaStatus_t count_events(
   const char* fpath, 
-  Info& info, 
-  MishaStatus_t (*count_fn)(FILE*, Info&)
+  Info& info 
   ){
 
   MishaStatus_t status; 
@@ -106,7 +122,7 @@ template <class Info> MishaStatus_t count_events(
   }
 	
 	// Jumping over the headers.
-  status = jump_header<Info>(fp, nullptr, false, info); 
+  status = jump_header<Info>(fp, info); 
   if (status != MISHA_OK) {
     std::cerr << "ERROR: While processing file header." << std::endl; 
     info.common.status = status; 
@@ -114,7 +130,7 @@ template <class Info> MishaStatus_t count_events(
     return status; 
   }
 
-  status = count_fn(fp, info); 
+  status = fn(fp, info); 
   
   if (status != MISHA_OK) {
     std::cerr << "ERROR: Could not process the file." << std::endl; 
@@ -127,11 +143,13 @@ template <class Info> MishaStatus_t count_events(
 	return MISHA_OK;
 }
 
-template <class Info> MishaStatus_t read_events(
+
+template <class Info>
+using read_fn = MishaStatus_t(*)(FILE*, Info&, MishaEvent*); 
+template <class Info, read_fn<Info> fn> MishaStatus_t read_events(
   const char* fpath, 
   Info& info, 
-  MishaEvent* arr, 
-  MishaStatus_t (*read_fn)(FILE*, Info&, MishaEvent*)
+  MishaEvent* arr
   ) {
   
   MishaStatus_t status; 
@@ -145,7 +163,7 @@ template <class Info> MishaStatus_t read_events(
 	
 	// Jumping over the headers.
 	if (info.common.startByte == 0){
-    status = jump_header<Info>(fp, nullptr, false, info); 
+    status = jump_header<Info>(fp, info); 
     if (status != MISHA_OK) {
       std::cerr << "ERROR: While processing file header." << std::endl; 
       info.common.status = status; 
@@ -153,7 +171,7 @@ template <class Info> MishaStatus_t read_events(
       return status; 
     }
 	} else {
-		if (fseeko(fp, (long) info.common.startByte, SEEK_CUR) != 0) {
+		if (fseeko(fp, (off_t) info.common.startByte, SEEK_CUR) != 0) {
       std::cerr << "ERROR: Could not perform fseeko." << std::endl; 
       info.common.status = MISHA_FILE_ERROR; 
       fclose(fp); 
@@ -161,7 +179,7 @@ template <class Info> MishaStatus_t read_events(
     }
 	}
 
-  status = read_fn(fp, info, arr); 
+  status = fn(fp, info, arr); 
   
   if (status != MISHA_OK) {
     std::cerr << "ERROR: Could not process the file." << std::endl; 
