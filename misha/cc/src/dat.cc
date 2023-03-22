@@ -31,17 +31,22 @@ extern "C" {
  *  Count events function.
  */
 MishaStatus_t count_fn_dat(FILE* fp, MishaDATInfo& info) {
-  // Reaching end of file to count number of bytes.
-  if (fseeko(fp, 0, SEEK_END) != 0) {
-    std::cerr << "ERROR: Could not reach end of file through fseeko()." << 
-      std::endl; 
-    info.common.status = MISHA_FILE_ERROR; 
-    return MISHA_FILE_ERROR; 
-  }
   
-  // Getting number of events as (file_size - header_size)/bytes_per_event.
-  info.common.dim = 
-    (ftello(fp) - info.common.startByte - 2) / sizeof(MishaDATPkt_t); 
+  MishaDATPkt_t buff[MISHA_FILE_BUFFER_SIZE]; 
+  std::size_t n = 0; 
+  info.common.dim = 0; 
+  // Jumping two bytes.
+  if (fseeko(fp, 2, SEEK_CUR) != 0) {
+    std::cerr << "ERROR: Could not perform fseeko on file." << std::endl; 
+    info.common.status = MISHA_FILE_ERROR; 
+    return MISHA_FILE_ERROR;
+  }
+
+  while (
+    (n = fread(buff, sizeof(MishaDATPkt_t), MISHA_FILE_BUFFER_SIZE, fp)) > 0
+    ) {
+    info.common.dim += n; 
+  }
   return MISHA_OK; 
 }
 
