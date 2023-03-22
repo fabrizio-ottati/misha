@@ -12,13 +12,13 @@ extern "C" {
   DLLEXPORT MishaStatus_t count_events_dat(
     const char* fpath, MishaDATInfo& info
     ) {
-    return count_events<MishaDATInfo>(fpath, info, count_fn_dat); 
+    return count_events<MishaDATInfo, count_fn_dat>(fpath, info); 
   }
 
   DLLEXPORT MishaStatus_t read_events_dat(
     const char* fpath, MishaDATInfo& info, MishaEvent* arr
     ) {
-    return read_events<MishaDATInfo>(fpath, info, arr, read_fn_dat); 
+    return read_events<MishaDATInfo, read_fn_dat>(fpath, info, arr); 
   }
 
   DLLEXPORT MishaStatus_t reset_common_info_dat(MishaDATInfo& info) {
