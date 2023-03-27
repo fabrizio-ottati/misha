@@ -56,8 +56,9 @@ template <class Info> MishaStatus_t jump_header(
   bool checkFirst = false; 
   char c[MISHA_HEADER_BUFF_SZ]; 
   while (1) {
+    // Reading a buffer of characters.
     if (fread(c, 1, MISHA_HEADER_BUFF_SZ, fp) <= 0) {
-      std::cerr << "ERROR: Could not read from file." << std::endl; 
+      std::cerr << "ERROR: Could not read the header from file." << std::endl; 
       info.common.status = MISHA_FILE_ERROR; 
       return MISHA_FILE_ERROR; 
     }
@@ -69,7 +70,8 @@ template <class Info> MishaStatus_t jump_header(
             if (
               fseeko(fp, -off_t(MISHA_HEADER_BUFF_SZ-(i+1)), SEEK_CUR) != 0
               ) {
-              std::cerr << "ERROR: Could not perform fseeko()." << std::endl; 
+              std::cerr << "ERROR: Could not perform fseeko() while " << 
+                "skipping the header." << std::endl; 
               info.common.status = MISHA_FSEEK_ERROR; 
               return MISHA_FSEEK_ERROR; 
             }
@@ -86,9 +88,10 @@ template <class Info> MishaStatus_t jump_header(
         // Checking first character to see if the header has ended.
         if (c[0] != MISHA_HEADER_START) {
           if (
-              fseeko(fp, -off_t(MISHA_HEADER_BUFF_SZ), SEEK_CUR) != 0
-             ) {
-            std::cerr << "ERROR: Could not perform fseeko()." << std::endl; 
+            fseeko(fp, -off_t(MISHA_HEADER_BUFF_SZ), SEEK_CUR) != 0
+            ) {
+            std::cerr << "ERROR: Could not perform fseeko() while " << 
+              "skipping the header." << std::endl; 
             info.common.status = MISHA_FSEEK_ERROR; 
             return MISHA_FSEEK_ERROR; 
           }
@@ -106,6 +109,13 @@ template <class Info> MishaStatus_t jump_header(
 }
 
 
+/** Count events contained in a file.
+ *
+ *  @param[in]    fpath   Input file path.
+ *  @param[inout] info    Info data structure.
+ *
+ *  @return       status  Status flag.
+ */
 template <class Info>
 using count_fn = MishaStatus_t(*)(FILE*, Info&); 
 template <class Info, count_fn<Info> fn> MishaStatus_t count_events(
